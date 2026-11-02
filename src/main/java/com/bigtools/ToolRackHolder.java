@@ -9,4 +9,9 @@ public interface ToolRackHolder {
 	int bigtools_getCursor();
 
 	void bigtools_setCursor(int cursor);
+
+	/** What the client was last told about this player's rack (server side only), or null if never sent. */
+	ToolRackSync.State bigtools_getSyncState();
+
+	void bigtools_setSyncState(ToolRackSync.State state);
 }

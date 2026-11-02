@@ -16,7 +16,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
 
 public final class ToolRack {
-	public static final int SIZE = 8;
+	public static final int SIZE = 6;
 
 	private ToolRack() {}
 

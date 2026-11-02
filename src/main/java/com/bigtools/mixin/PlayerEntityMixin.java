@@ -2,6 +2,7 @@ package com.bigtools.mixin;
 
 import com.bigtools.ToolRack;
 import com.bigtools.ToolRackHolder;
+import com.bigtools.ToolRackSync;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.SimpleInventory;
@@ -23,6 +24,9 @@ public abstract class PlayerEntityMixin implements ToolRackHolder {
 	@Unique
 	private int bigtools$cursor;
 
+	@Unique
+	private ToolRackSync.State bigtools$syncState;
+
 	// Lazy: the PlayerScreenHandler is built inside PlayerEntity's constructor and asks for the rack.
 	@Override
 	public SimpleInventory bigtools_getRack() {
@@ -40,6 +44,16 @@ public abstract class PlayerEntityMixin implements ToolRackHolder {
 	@Override
 	public void bigtools_setCursor(int cursor) {
 		this.bigtools$cursor = cursor;
+	}
+
+	@Override
+	public ToolRackSync.State bigtools_getSyncState() {
+		return this.bigtools$syncState;
+	}
+
+	@Override
+	public void bigtools_setSyncState(ToolRackSync.State state) {
+		this.bigtools$syncState = state;
 	}
 
 	@Inject(method = "writeCustomDataToNbt", at = @At("TAIL"))

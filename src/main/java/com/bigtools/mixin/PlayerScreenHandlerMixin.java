@@ -22,8 +22,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
  * Re-maps the vanilla player screen handler: armor/offhand slots point at their new inventory
- * indices, 29 extra inventory slots and the tool rack slots are appended, and everything is
+ * indices, extra inventory slots and the tool rack slots are appended, and everything is
  * repositioned for the wide layout. Shift-click is rewritten for the new slot ids.
+ * Slot ids 0-45 keep their vanilla meaning, so creative mode and the recipe book still work.
  */
 @Mixin(PlayerScreenHandler.class)
 public abstract class PlayerScreenHandlerMixin extends ScreenHandler {
@@ -33,18 +34,18 @@ public abstract class PlayerScreenHandlerMixin extends ScreenHandler {
 
 	@Inject(method = "<init>", at = @At("TAIL"))
 	private void bigtools$init(PlayerInventory inventory, boolean onServer, PlayerEntity owner, CallbackInfo ci) {
-		// armor (ids 5-8) and offhand (id 45): inventory index shifts because main is now 65 long
+		// armor (ids 5-8) and offhand (id 45): inventory index shifts because main is now longer
 		for (int id : new int[]{5, 6, 7, 8, 45}) {
 			Slot slot = this.slots.get(id);
 			((SlotAccessor) slot).bigtools$setIndex(slot.getIndex() + BigLayout.EXTRA_SHIFT);
 		}
 
-		// extra inventory slots: ids 46-74 = inventory indices 36-64
+		// extra inventory slots: ids 46.. = inventory indices 36..
 		for (int idx = 36; idx < BigLayout.INV_SIZE; idx++) {
 			this.addSlot(new Slot(inventory, idx, 0, 0));
 		}
 
-		// tool rack: ids 75-82
+		// tool rack: ids TOOL_FIRST..
 		SimpleInventory rack = ((ToolRackHolder) (Object) owner).bigtools_getRack();
 		for (int i = 0; i < ToolRack.SIZE; i++) {
 			this.addSlot(new ToolSlot(rack, i, 0, 0));
@@ -60,6 +61,9 @@ public abstract class PlayerScreenHandlerMixin extends ScreenHandler {
 
 	@Inject(method = "quickMove", at = @At("HEAD"), cancellable = true)
 	private void bigtools$quickMove(PlayerEntity player, int index, CallbackInfoReturnable<ItemStack> cir) {
+		final int extraEnd = BigLayout.TOOL_FIRST; // exclusive end of the extra inventory slots
+		final int toolEnd = BigLayout.TOOL_FIRST + ToolRack.SIZE;
+
 		Slot slot = this.slots.get(index);
 		if (slot == null || !slot.hasStack()) {
 			cir.setReturnValue(ItemStack.EMPTY);
@@ -68,16 +72,16 @@ public abstract class PlayerScreenHandlerMixin extends ScreenHandler {
 		ItemStack stack = slot.getStack();
 		ItemStack original = stack.copy();
 
-		boolean inStorage = (index >= 9 && index <= 35) || (index >= 46 && index <= 70);
-		boolean inHotRow = (index >= 36 && index <= 44) || (index >= 71 && index <= 74);
+		boolean inStorage = (index >= 9 && index <= 35) || (index >= BigLayout.EXTRA_FIRST_ID && index < extraEnd);
+		boolean inHotbar = index >= 36 && index <= 44;
 		boolean moved;
 
 		if (index == 0) {
-			moved = this.bigtools$toInventory(stack, true);
+			moved = this.bigtools$toInventory(stack, true, extraEnd);
 			if (moved) slot.onQuickTransfer(stack, original);
-		} else if (!inStorage && !inHotRow) {
+		} else if (!inStorage && !inHotbar) {
 			// crafting grid, armor, offhand, tool rack -> inventory
-			moved = this.bigtools$toInventory(stack, false);
+			moved = this.bigtools$toInventory(stack, false, extraEnd);
 		} else {
 			moved = false;
 			EquipmentSlot equip = MobEntity.getPreferredEquipmentSlot(stack);
@@ -86,19 +90,17 @@ public abstract class PlayerScreenHandlerMixin extends ScreenHandler {
 				moved = this.insertItem(stack, armorId, armorId + 1, false);
 			}
 			if (!moved && ToolRack.isTool(stack)) {
-				moved = this.insertItem(stack, BigLayout.TOOL_FIRST, BigLayout.TOOL_FIRST + ToolRack.SIZE, false);
+				moved = this.insertItem(stack, BigLayout.TOOL_FIRST, toolEnd, false);
 			}
 			if (!moved && equip == EquipmentSlot.OFFHAND && !this.slots.get(45).hasStack()) {
 				moved = this.insertItem(stack, 45, 46, false);
 			}
 			if (!moved) {
 				if (inStorage) {
-					boolean a = this.insertItem(stack, 36, 45, false);
-					boolean b = this.insertItem(stack, 71, 75, false);
-					moved = a || b;
+					moved = this.insertItem(stack, 36, 45, false);
 				} else {
 					boolean a = this.insertItem(stack, 9, 36, false);
-					boolean b = this.insertItem(stack, 46, 71, false);
+					boolean b = this.insertItem(stack, BigLayout.EXTRA_FIRST_ID, extraEnd, false);
 					moved = a || b;
 				}
 			}
@@ -124,11 +126,10 @@ public abstract class PlayerScreenHandlerMixin extends ScreenHandler {
 		cir.setReturnValue(original);
 	}
 
-	private boolean bigtools$toInventory(ItemStack stack, boolean fromLast) {
+	private boolean bigtools$toInventory(ItemStack stack, boolean fromLast, int extraEnd) {
 		boolean a = this.insertItem(stack, 36, 45, fromLast);
-		boolean b = this.insertItem(stack, 71, 75, fromLast);
-		boolean c = this.insertItem(stack, 9, 36, fromLast);
-		boolean d = this.insertItem(stack, 46, 71, fromLast);
-		return a || b || c || d;
+		boolean b = this.insertItem(stack, 9, 36, fromLast);
+		boolean c = this.insertItem(stack, BigLayout.EXTRA_FIRST_ID, extraEnd, fromLast);
+		return a || b || c;
 	}
 }

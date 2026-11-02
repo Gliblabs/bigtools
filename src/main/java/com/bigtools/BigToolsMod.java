@@ -1,6 +1,7 @@
 package com.bigtools;
 
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.util.Identifier;
 
@@ -17,5 +18,7 @@ public class BigToolsMod implements ModInitializer {
 				else if (action == 1) ToolRack.stow(player);
 			});
 		});
+
+		ServerTickEvents.END_SERVER_TICK.register(ToolRackSync::tick);
 	}
 }

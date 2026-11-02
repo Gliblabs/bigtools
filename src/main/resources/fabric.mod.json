@@ -3,7 +3,7 @@
   "id": "bigtools",
   "version": "${version}",
   "name": "Big Inventory + Tool Rack",
-  "description": "65-slot player inventory (13 wide) plus a separate tool rack that does not use inventory or hotbar space.",
+  "description": "61-slot player inventory (13 wide, normal 9-slot hotbar) plus a separate tool rack that does not use inventory or hotbar space.",
   "authors": ["You"],
   "license": "MIT",
   "environment": "*",
