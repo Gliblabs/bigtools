@@ -1,0 +1,9 @@
+{
+  "gui.bigtools.tools": "Tools",
+  "key.categories.bigtools": "Big Inventory + Tool Rack",
+  "key.bigtools.cycle": "Equip next tool from rack",
+  "key.bigtools.stow": "Stow held tool in rack",
+  "message.bigtools.hold_tool": "Hold a tool or an empty hand first",
+  "message.bigtools.empty_rack": "No tools in your tool rack",
+  "message.bigtools.rack_full": "Tool rack is full"
+}
